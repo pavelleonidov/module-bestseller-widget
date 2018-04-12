@@ -27,6 +27,13 @@ class Widget extends \Magento\Catalog\Block\Product\AbstractProduct implements B
      */
     protected $_productCollectionFactory;
 
+	/**
+	 * Catalog product visibility
+	 *
+	 * @var \Magento\Catalog\Model\Product\Visibility
+	 */
+	protected $_catalogProductVisibility;
+
     /**
      * @var array
      */
@@ -42,10 +49,13 @@ class Widget extends \Magento\Catalog\Block\Product\AbstractProduct implements B
         \Magento\Catalog\Block\Product\Context $context,
         BestsellersCollectionFactory $bestsellersCollectionFactory,
         ProductCollectionFactory $productCollectionFactory,
+        \Magento\Catalog\Model\Product\Visibility $catalogProductVisibility,
+
         array $data = []
     ) {
         $this->_bestsellersCollectionFactory = $bestsellersCollectionFactory;
         $this->_productCollectionFactory = $productCollectionFactory;
+        $this->_catalogProductVisibility = $catalogProductVisibility;
         parent::__construct(
             $context,
             $data
@@ -183,9 +193,6 @@ class Widget extends \Magento\Catalog\Block\Product\AbstractProduct implements B
             )
             ->addStoreFilter(
                 $this->_storeManager->getStore()->getId()
-            )
-            ->setPageSize(
-                $this->getProductsCount()
             );
         $intervals = $this->_getReportIntervals();
         if (isset($intervals[$period])) {
@@ -245,7 +252,11 @@ class Widget extends \Magento\Catalog\Block\Product\AbstractProduct implements B
     protected function _createProductCollection(array $productIds)
     {
         $collection = $this->_productCollectionFactory->create();
-        $this->_addProductAttributesAndPrices(
+        $collection
+	        ->setVisibility($this->_catalogProductVisibility->getVisibleInCatalogIds())
+            ->setPageSize($this->getProductsCount());
+
+	    $this->_addProductAttributesAndPrices(
             $collection
         )->addIdFilter($productIds);
         return $collection;
